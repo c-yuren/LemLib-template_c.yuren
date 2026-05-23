@@ -11,60 +11,11 @@
 // 6. large_time   : [寬鬆計時] 寬鬆範圍的超時時間 (ms)
 // 7. slew         : [防翹孤輪] 加速度限制 (數值越小越柔和，127 為無限制)
 
-
-// set_linear_constants(10, 0, 3, 3, 1, 100, 3, 500, 20);
-// set_angular_constants(2, 0, 10, 3, 1, 100, 3, 500, 0);
 void print_coord() {
     double x = chassis.getPose().x;
     double y = chassis.getPose().y;
     printf("X: %.f", x);
     printf("   Y: %.f\n", y);
-}
-
-struct OuttakeParams {
-    int time;
-};
-
-void outtake_task_fn(void* param) {
-    OuttakeParams* p = (OuttakeParams*)param;
-    int timeMsec = p->time;
-    delete p; // 釋放記憶體
-
-    int startTime = pros::millis();
-    Intake.move(127);
-    Outtake.move(127);
-
-    while (pros::millis() - startTime < timeMsec) {
-        int elapsedTime = pros::millis() - startTime;
-        double outtakeVel = std::abs(Outtake.get_actual_velocity());
-
-        if (elapsedTime > 500) {
-            if (outtakeVel > 480) {
-                if (elapsedTime < (timeMsec * 0.8)) {
-                    Intake.move(-127);
-                    pros::delay(300);
-                    Intake.move(127);
-                    pros::delay(1300);
-                } else {
-                    break; 
-                }
-            }
-        }
-        pros::delay(10);
-    }
-    Outtake.move(0);
-}
-
-void Outtaking(int timeMsec, bool blocking ){
-    if (blocking) {
-        // 阻塞模式：直接執行原本的邏輯 (或是呼叫上面的 task 函式並等待)
-        OuttakeParams* p = new OuttakeParams{timeMsec};
-        outtake_task_fn(p);
-    } else {
-        // 非阻塞模式：啟動 Task 後立刻往下跑
-        OuttakeParams* p = new OuttakeParams{timeMsec};
-        pros::Task outtakeTask(outtake_task_fn, p, "Outtake Task");
-    }
 }
 
 void moveTime(double speed_volt, double Timemsec,bool stop) {
@@ -88,6 +39,7 @@ const double OFFSET_RIGHT_F = 0.0;
 const double OFFSET_RIGHT_R = 4.0;   // 右感測器靠右 4 吋
 const double OFFSET_LEFT_F  = 0.0;
 const double OFFSET_LEFT_R  = -4.0;  // 左感測器靠左 4 吋
+
 void reset(SensorSelect s1, SensorSelect s2, double angle) {
     constexpr double halfField = 72.0;
 
@@ -243,60 +195,5 @@ void drive_distance(float distance, float heading, int timeout, lemlib::MoveToPo
     params.forwards = (distance >= 0);
 
     // 5. 呼叫原生的 moveToPoint
-    chassis.moveToPoint(targetX, targetY, timeout, params, async);
-}
-
-/**
- * @brief 讀取距離感測器並移動 (支援 MoveToPoint 參數與 Async)
- * * @param targetGapInches 目標離牆距離 (英吋)
- * @param timeout 超時 (ms)
- * @param useFrontSensor true=前感測器, false=後感測器
- * @param params LemLib 移動參數 (maxSpeed, minSpeed 等)
- * @param async true=不等待直接回傳, false=等待直到移動完成
- */
-void driveToWallSmart(float targetGapInches, int timeout, bool useFrontSensor, lemlib::MoveToPointParams params, bool async) {
-    // 1. 讀取數據
-    pros::Distance& sensor = useFrontSensor ? Front_Distance_sensor : Back_Distance_sensor;
-    double currentDistMM = sensor.get();
-    
-    // 無效值處理：若 async=false 且讀不到值，直接 return 避免卡住
-    if (currentDistMM > 3000) return; 
-
-    double currentDistInches = currentDistMM / 25.4;
-    
-    // 2. 計算位移
-    double diff = currentDistInches - targetGapInches;
-    // 前鏡頭: 距離過大需前進(+); 後鏡頭: 距離過大需後退(-)
-    double shift = useFrontSensor ? diff : -diff;
-
-    // 誤差過小不執行
-    if (std::abs(shift) < 0.5) return;
-
-    // 3. 獲取並吸附角度
-    lemlib::Pose pose = chassis.getPose();
-    double theta = std::fmod(pose.theta, 360.0);
-    if (theta < 0) theta += 360.0;
-
-    int snappedAngle = 0;
-    if (theta >= 45 && theta < 135) snappedAngle = 90;
-    else if (theta >= 135 && theta < 225) snappedAngle = 180;
-    else if (theta >= 225 && theta < 315) snappedAngle = 270;
-    else snappedAngle = 0;
-
-    // 4. 計算目標座標
-    float targetX = pose.x;
-    float targetY = pose.y;
-
-    switch (snappedAngle) {
-        case 0:   targetY += shift; break;
-        case 90:  targetX += shift; break;
-        case 180: targetY -= shift; break;
-        case 270: targetX -= shift; break;
-    }
-
-    // 5. 設定方向 (用前鏡頭則車頭朝向目標，用後鏡頭則車尾朝向目標)
-    params.forwards = useFrontSensor;
-
-    // 6. 執行移動，傳入 async 參數
     chassis.moveToPoint(targetX, targetY, timeout, params, async);
 }

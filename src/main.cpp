@@ -450,10 +450,8 @@ void opcontrol() {
     chassis.setPose(0, 0, 0);
     reset(front, none, 0);
     if (current_auton_selection == 8) { skill_driver(); }
-    pros::Task task1(Loader_switch);
-    pros::Task task2(Center_switch);
-    pros::Task task3(Descore_switch);
-    pros::Task task4(Outtake_spin);
+    // placeing task here
+    // pros::Task task1(Loader_switch);
     while (true) {
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
