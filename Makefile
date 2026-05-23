@@ -7,10 +7,10 @@ CXXEXTS:=cpp c++ cc
 
 # probably shouldn't modify these, but you may need them below
 ROOT=.
-FWDIR:=$(ROOT)/firmware
-BINDIR=$(ROOT)/bin
-SRCDIR=$(ROOT)/src
-INCDIR=$(ROOT)/include
+FWDIR:=firmware
+BINDIR:=bin
+SRCDIR:=src
+INCDIR:=include
 
 WARNFLAGS+=
 EXTRA_CFLAGS=

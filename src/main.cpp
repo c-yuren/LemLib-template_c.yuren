@@ -405,14 +405,10 @@ void initialize() {
     pros::Task Brain_screen(brain_screen_task);
 }
 
-/**
- * Runs while the robot is disabled
- */
+// Runs while the robot is disabled
 void disabled() {}
 
-/**
- * runs after initialize if the robot is connected to field control
- */
+// runs after initialize if the robot is connected to field control
 void competition_initialize() {
     switch (current_auton_selection) {
         case 1: chassis.setPose(0, 0, 0); break;
