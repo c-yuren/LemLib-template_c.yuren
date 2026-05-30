@@ -40,6 +40,7 @@
 #include "lemlib/api.hpp"
 #include "functions.hpp"
 #include "usercontrol.hpp"
+#include "robot.hpp"
 /**
  * You should add more #includes here
  */
@@ -81,10 +82,7 @@ void opcontrol(void);
 
 #ifdef __cplusplus
 
-extern lemlib::Chassis chassis;
 
-extern lemlib::ControllerSettings linearController; 
-extern lemlib::ControllerSettings angularController; // 建議連轉向也一起廣播
 /**
  * You can add C++-only headers here
  */
@@ -92,23 +90,6 @@ extern lemlib::ControllerSettings angularController; // 建議連轉向也一起
 
 //新增
 extern bool auton_start ;
-extern pros::Controller controller;
-
-extern lemlib::Chassis chassis;
-
-extern pros::Motor Intake;
-extern pros::Motor Outtake;
-
-extern pros::adi::Pneumatics descore;
-extern pros::adi::Pneumatics Loader;
-extern pros::adi::Pneumatics goal_switch;
-
-extern pros::Distance Front_Distance_sensor;
-extern pros::Distance Back_Distance_sensor;
-extern pros::Distance Right_Distance_sensor;
-extern pros::Distance Left_Distance_sensor;
-
-extern pros::Imu imu_sensor;
 #endif
 
 #endif  // _PROS_MAIN_H_
